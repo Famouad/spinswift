@@ -49,8 +49,11 @@ print(laser.ComputeInstantPower(time:laser.CurrentTime))
     laser.CurrentTime += timestep
     print(laser.CurrentTime,laser.temperatures.Electron,laser.temperatures.Phonon)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 }
 =======
+=======
+>>>>>>> Stashed changes
 }*/
 
 var data = String()
@@ -109,4 +112,7 @@ let sol: Integrate = Integrate(h)
 
 var p = SimulationProgram(sol)
 p.Simulate(Program: "curie_temperature", Initialize: inisimulation)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

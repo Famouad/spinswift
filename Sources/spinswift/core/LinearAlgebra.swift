@@ -15,6 +15,9 @@ infix operator °
 =======
 infix operator ^ 
 infix operator ⊗
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 public class Vector3 : Codable {
