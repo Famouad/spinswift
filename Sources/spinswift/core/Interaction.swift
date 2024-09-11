@@ -8,6 +8,8 @@ import Foundation
 /// Interactions act between atoms. 
 /// - Author: Pascal Thibaudeau
 /// - Date: 14/04/2023
+/// - Update author: Mouad Fattouhi
+/// - Updated: 01/09/2024
 /// - Version: 0.1
 class Interaction : Codable {
     
@@ -21,8 +23,13 @@ class Interaction : Codable {
     private struct Exchange : Codable {
         /// true or false if the exchange is computed
         var computed: Bool = false
-        var J: Double = Double()
-        var n: [Int] = [Int]()
+        //var J: Double = Double()
+        //var n: [Int] = [Int]()
+        var typeI: Int = Int()
+        var typeJ: Int = Int()
+        var value: Double = Double()
+        var Rcut: Double = Double()
+        var BCs: BoundaryConditions = BoundaryConditions()
     }
     private struct DMI : Codable {
         /// true or false if the DMI is computed
@@ -81,14 +88,19 @@ class Interaction : Codable {
         return self
     }
 
-    func ExchangeField(typeI: Int, typeJ: Int, value: Double, Rcut: Double? = Double()) -> Interaction {
+    func ExchangeField(typeI: Int, typeJ: Int, value: Double, Rcut: Double, BCs: BoundaryConditions) -> Interaction {
         let NumberOfAtoms: Int = atoms.count
+        //var nn: Int = 0
         for i: Int in 0...NumberOfAtoms-1 where atoms[i].type == typeI {
-           for j: Int in 0...i where atoms[j].type == typeJ && Distance(atoms[i].position, atoms[j].position)<=Rcut! && Distance(atoms[i].position, atoms[j].position)>0 {
-            atoms[i].ω += value*atoms[j].spin
-            atoms[j].ω = atoms[i].ω
+           for j: Int in 0...i where atoms[j].type == typeJ && ComputeDistance(BCs: BCs,atom1: atoms[i],atom2: atoms[j])<=Rcut && ComputeDistance(BCs: BCs,atom1: atoms[i],atom2: atoms[j]) != 0 {
+            //if (i == 0 || j == 0) {nn+=1}      
+            atoms[i].ω -= value*atoms[j].spin
+            atoms[j].ω -= value*atoms[i].spin
            }
+           //print("i="+String(i)+"====================================")
         }
+        //print(String(nn))
+        self.isExchange = Interaction.Exchange(computed: true, typeI: typeI, typeJ: typeJ, value: value, Rcut: Rcut, BCs: BCs)
         return self
     }
 
@@ -102,7 +114,8 @@ class Interaction : Codable {
     }
     
     func ZeemanField(_ axis: Vector3, value: Double) -> Interaction {
-        let coeff = (γ.value)*value
+        let coeff = (-γ.value)*value
+        ///(ℏ.value)
         atoms.forEach {
             $0.ω += coeff*axis
         }
@@ -115,6 +128,7 @@ class Interaction : Codable {
         atoms.forEach {$0.ω = Vector3(0,0,0)}
         //If the fields have been computed, then update them with the proper set of values
         if (isZeeman.computed) {self.ZeemanField(isZeeman.axis,value:isZeeman.value)}
+        if (isExchange.computed) {self.ExchangeField(typeI: isExchange.typeI, typeJ: isExchange.typeJ, value: isExchange.value, Rcut: isExchange.Rcut, BCs: isExchange.BCs)}
         if (isUniaxial.computed) {self.UniaxialField(isUniaxial.axis,value:isUniaxial.value)}
         if (isDamping.computed) {self.Dampening(isDamping.α)}
     }

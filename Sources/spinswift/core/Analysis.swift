@@ -26,9 +26,21 @@ class Analysis {
             m += (($0.g)*($0.spin))
             g += ($0.g)
         }
+        //print(String($0.spin.x))
 
         guard g != 0 else {return Vector3(0,0,0)}
         return (1.0/g)*m
+    }
+
+    func GetMagnetizationLength() -> Double {
+        var mnorm: Double = 0
+        var g : Double = 0
+        atoms.forEach {
+            mnorm += (($0.g)*($0.spin).Norm())
+            g += ($0.g)
+        }
+        guard g != 0 else {return 0}
+        return (1.0/g)*mnorm
     }
 
     func GetTorque() -> Vector3 {
