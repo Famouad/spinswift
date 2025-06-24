@@ -53,7 +53,7 @@ class SimulationProgram : Codable {
         case "curie_temperature"? :
         self.curieTemp(Initialize: IP)
         case "optical_pulse"? : 
-        self.opticalPulse(IP: IP)
+        self.opticalPulse(Initialize: IP)
         case "time_dynamics"? : 
         self.timeDynamics(Initialize: IP)
         case "paramagneticspins"? : break 
@@ -106,7 +106,7 @@ class SimulationProgram : Codable {
 
     //Laser Pulse programe
 
-   private func opticalPulse(IP: Inputs) {
+   private func opticalPulse(Initialize: Inputs) {
         let pulse = LaserExcitation.Pulse(Form: "Gaussian", Fluence: 32.5, Duration: 60E-15, Delay: 5e-12)
         let Cp = LaserExcitation.TTM.HeatCapacity(Electron:7E3, Phonon:3e6)
         let G = LaserExcitation.TTM.Coupling(ElectronPhonon: 60e17)
