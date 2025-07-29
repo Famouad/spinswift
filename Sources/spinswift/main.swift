@@ -279,7 +279,7 @@ p.simulate(Program: "curie_temperature", IP: inisimulation)
 /****** Simulate FeGd bulk alloy *******/
 
 //Gadolinum Paramertes
-let TcGd: Double = 292.5 //experimental
+let TcGd: Double = 292.5 //experimental Values
 let a1: Double = 0.363
 let J_GdGd: Double = 0.79*7.8
 let D_01: Double = J_GdGd*a1*a1
