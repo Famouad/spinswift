@@ -113,7 +113,7 @@ class SimulationProgram : Codable {
         let ttm = LaserExcitation.TTM(EffectiveThickness:15E-9, InitialTemperature: 82, Damping: 5E-12, HeatCapacity: Cp, Coupling: G)
         let laser = LaserExcitation(temperatures: .init(Electron:ttm.InitialTemperature, Phonon:ttm.InitialTemperature, Spin:ttm.InitialTemperature), pulse:pulse,ttm:ttm)
         var content: String = String()
-        let Δt : Double = IP.time_step
+        let Δt : Double = Initialize.time_step
         var sl1: [Atom] = []
         var sl2: [Atom] = []
 
@@ -126,11 +126,11 @@ class SimulationProgram : Codable {
             }
 
 
-        while (laser.CurrentTime < IP.stop*1E-12) {
+        while (laser.CurrentTime < Initialize.stop*1E-12) {
             laser.AdvanceTemperaturesGaussian(method:"euler",Δt: Δt*1E-12)
             laser.CurrentTime += Δt*1E-12
             for a in I.h.atoms {
-                a.advanceMoments(method: "rk4", Δt: Δt, T: laser.temperatures.Electron, α: IP.α, thermostat: IP.thermostat)
+                a.advanceMoments(method: "rk4", Δt: Δt, T: laser.temperatures.Electron, α: Initialize.α, thermostat: Initialize.thermostat)
             } 
 
             //laser.temperatures.Electron
@@ -162,7 +162,7 @@ class SimulationProgram : Codable {
     private func timeDynamics(Initialize: Inputs) {
         
         let T: Double = Initialize.T_initial
-        let Fn: String = "Dy_T_" + String(format: "%.0f", T) + "a_1e-2"
+        let Fn: String = "Dy_T_001" + String(format: "%.0f", T) + "a_1e-2"
         let stop: Double = Initialize.stop; let Δt : Double = Initialize.time_step; let T_final: Double = Initialize.T_final
         let dT: Double = Initialize.T_step; let α: Double = Initialize.α; let thermostat: String = Initialize.thermostat 
 

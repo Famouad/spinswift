@@ -32,6 +32,8 @@ class Atom : Codable {
     var ω: Vector3
     /// The first and second moments of dLLB
     var moments: Moments 
+    /// The interaction to account spin torques
+    //var In: Interaction
     /** The first moment of the dLLB is the averga of the spin <S> as a vector3
         The second moment of the dLLB is the statistical cumulant of the spin <S*S> which is a Matrix3 
     **/
@@ -163,12 +165,10 @@ class Atom : Codable {
 
 private func rhs(moments: Moments, Temp: Double? = Double(), alpha: Double? = Double(), ther: String) -> Moments {
         let α: Double = alpha!  
-        //alpT(Temp: Temp!, alpha: alpha!)  
         let c: Double = 1/(1+(α*α))
         let n: Double = g*μ_B.value
         let D: Double = γ.value*(α/n)*computeThermalCoef(Temp: Temp!, thermostat: ther)
-        //(α/ℏ.value)*computeThermalCoef(Temp: Temp!, thermostat: ther)
-        //(alpL(Temp: Temp!, alpha: alpha!)/ℏ.value)*computeThermalCoef(Temp: Temp!, thermostat: ther) 
+
         let spin: Vector3 = moments.spin
         let Σ: Matrix3 = moments.sigma
         let I: Matrix3 = Matrix3(fill:"identity")
@@ -187,6 +187,91 @@ private func rhs(moments: Moments, Temp: Double? = Double(), alpha: Double? = Do
         return rhsdLLB
 
     }
+
+    //RHS with STT and anisotropy closed
+
+    private func rhsfull(moments: Moments, Temp: Double? = Double(), alpha: Double? = Double(), ther: String) -> Moments {
+        let α: Double = alpha!  
+        let c: Double = 1/(1+(α*α))
+        let n: Double = g*μ_B.value
+        let D: Double = γ.value*(α/n)*computeThermalCoef(Temp: Temp!, thermostat: ther)
+
+        //Anisotropy parameters
+        let n_k: Vector3 = Vector3(1,0,0) 
+        //In.isUniaxial.axis
+        let coeff = 0*0.00050369
+        let ω_a: Double = γ.value*coeff/(g*μ_B.value)
+        //In.isUniaxial.value
+
+        //STT parameters
+        let p: Vector3 = Vector3(0,0,1) 
+        //In.isSTT_Damping.Pol
+
+        //Define STT amplitude
+
+        let Pol: Double = 0.7
+        let M_s: Double = 0.5e6 
+        let d: Double = 1e-9
+        let J: Double = 1e12
+
+        let ω_st: Double = γ.value*1
+        // 
+        //μ_B.value*Joule.value*Pol*J/(M_s*elementary_charge.value*d)
+        //In.isSTT_Damping.Amplitde
+
+        let spin: Vector3 = moments.spin
+        let Σ: Matrix3 = moments.sigma
+        let I: Matrix3 = Matrix3(fill:"identity")
+        var rhsdLLB: Moments = Atom.Moments()
+        
+        var a1: Matrix3 = (Σ.Trace()*(ω ⊗ spin)) - (Σ.Transpose()*(ω ⊗ spin))
+            a1+=((ω ⊗ spin)*Σ.Transpose()) - ((ω ⊗ spin).Trace()*Σ.Transpose())
+            a1+=((ω ⊗ spin) - (ω ⊗ spin).Transpose())*Σ.Transpose()
+            a1-=2*(((spin ⊗ spin).Trace()*(ω ⊗ spin)) - ((spin ⊗ spin).Transpose()*(ω ⊗ spin)))  
+
+        var a2: Matrix3 = 2*ω_a*(n_k°spin)*(n_k°spin)*(spin ⊗ spin) - 2*ω_a*((Σ*n_k) ⊗ (Σ*n_k))  
+            a2-=ω_a*quad(n_k,Σ,n_k)*Σ + 2*ω_a*(spin°spin)*(n_k°spin)*(spin ⊗ n_k)
+            a2+=2*ω_a*((Σ.Transpose()*(Σ*n_k)) ⊗ n_k) - 2*ω_st*(spin°spin)*((p × spin) ⊗ spin)
+            a2+=2*ω_st*((p × Σ)*Σ.Transpose()) + 2*ω_a*Σ.Trace()*((Σ*n_k) ⊗ n_k)
+            a2+=(ω_st*Σ.Trace())*(p × Σ)
+
+            //print("a2=")
+
+            //a2.Print()
+
+        var b1: Matrix3 = ω_a*(((n_k × Σ)*n_k) ⊗ spin) + ω_st*Σ.Trace()*(p ⊗ spin) - ω_st*((Σ*p) ⊗ spin) 
+            b1-=2*ω_a*(n_k°spin)*((n_k × spin) ⊗ spin) + 2*ω_st*(spin°spin)*(p ⊗ spin) - 2*ω_st*(spin°p)*(spin ⊗ spin)
+            b1+=ω_a*((n_k × spin) ⊗ (Σ*n_k)) + 2*ω_st*((Σ*spin) ⊗ p) - 2*ω_st*(spin°p)*Σ
+            b1+=ω_a*(n_k°spin)*(n_k × Σ)
+
+            //print("b1=")
+            //b1.Print()
+ 
+
+        var st: Vector3 = (ω_st*(Σ.Trace()*p)) - (ω_st*(Σ*p)) - α*2*(ω_st*Σ)*(p × spin) 
+            st+=α*ω_st*Σ.Trace()*(p × spin) - 2*α*ω_st*(spin°spin)*(p × spin) 
+            st+=2*α*ω_st*((Σ*spin) × p)
+
+            //print("st=")
+            //st.Print()
+
+        var anis: Vector3 =  ω_a*(n_k × (Σ*n_k)) + α*2*ω_a*(n_k°spin)*((n_k°spin)*spin - Σ*n_k) 
+            anis-=α*ω_a*quad(n_k,Σ,n_k)*spin - α*ω_a*Σ.Trace()*(n_k°spin)*n_k
+            anis-=2*α*ω_a*(spin°spin)*(n_k°spin)*n_k
+            anis+=2*α*ω_a*quad(spin,Σ,n_k)*n_k
+
+            //print("an=")
+            //anis.Print()
+
+        let m1: Matrix3 = (ω × Σ.Transpose()) + b1 + α*(a1 + a2)
+        let m2: Matrix3 = (2*Σ.Trace()*I) - (3*(Σ+Σ.Transpose()))
+
+        rhsdLLB.spin = c*((ω × spin) + ((α*Σ.Trace()*ω) - (α*Σ.Transpose()*ω)) + (st + anis) - (2*D*c*spin))
+        rhsdLLB.sigma = c*(m1 + (D*c*m2) + m1.Transpose())
+
+        return rhsdLLB
+    }
+
 
 /* Implementation not working !! 
 
@@ -225,12 +310,12 @@ private func rhs(moments: Moments, Temp: Double? = Double(), alpha: Double? = Do
     func advanceMoments(method: String, Δt: Double, T: Double? = Double(), α: Double? = Double(), thermostat: String? = String()) {
         switch method.lowercased() {
         case "euler" :
-            self.moments += Δt*rhs(moments:self.moments, Temp: T!, alpha: α!, ther: thermostat!)
+            self.moments += Δt*rhsfull(moments:self.moments, Temp: T!, alpha: α!, ther: thermostat!)
         case "rk4" :
-            let k1: Moments = rhs(moments:self.moments, Temp: T!, alpha: α!, ther: thermostat!)
-            let k2: Moments = rhs(moments:self.moments+0.5*Δt*k1, Temp: T!, alpha: α!, ther: thermostat!)
-            let k3: Moments = rhs(moments:self.moments+0.5*Δt*k2, Temp: T!, alpha: α!, ther: thermostat!)
-            let k4: Moments = rhs(moments:self.moments+Δt*k3, Temp: T!, alpha: α!, ther: thermostat!)
+            let k1: Moments = rhsfull(moments:self.moments, Temp: T!, alpha: α!, ther: thermostat!)
+            let k2: Moments = rhsfull(moments:self.moments+0.5*Δt*k1, Temp: T!, alpha: α!, ther: thermostat!)
+            let k3: Moments = rhsfull(moments:self.moments+0.5*Δt*k2, Temp: T!, alpha: α!, ther: thermostat!)
+            let k4: Moments = rhsfull(moments:self.moments+Δt*k3, Temp: T!, alpha: α!, ther: thermostat!)
             self.moments += (Δt/6)*(k1+2*k2+2*k3+k4)
         case "expio1" :
             print("Not implemented yet")

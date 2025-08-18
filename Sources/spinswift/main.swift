@@ -177,27 +177,34 @@ p.simulate(Program: "optical_pulse", IP: inisimulation)
 /*******************************************************************************/
 */
 
-/*
+
 /****** Simulate Cobalt bulk FCC *******/
 
 //compute Magnon energy
-
 let a: Double = 0.352
 let Jexp: Double = 38
 let J_ij: Double = 0.79*Jexp
 let D_0: Double = 0.79*Jexp*a*a
-//let D_0: Double = 384*1e-2 
-let D_1: Double = J_ij*a*a
-let V_0: Double = a*a*a
-let Em: Double = (D_0)*pow(((6*π*π)/V_0),2/3)
-let Em1: Double = (D_1)*pow(((6*π*π)/V_0),2/3)
-print(String(Em))
-print(String(Em1))
+
+//Define STT amplitude
+/*
+let Pol: Double = 0.7
+let M_s: Double = 0.5e6 
+let d: Double = 1e-9
+let J: Double = 1e12
+
+let STT_amp: Double = μ_B.value*Joule.value*Pol*J/(M_s*elementary_charge.value*d)
+*/
+
+
 
 //Define parameters 
-let mm = Atom.Moments(spin:Vector3(1,0.0,0.0),sigma: Matrix3(1,0,0,0,0,0,0,0,0))
+//let mm = Atom.Moments(spin:Vector3(0.0,0.0,-1),sigma: Matrix3(0,0,0,0,0,0,0,0,1))
+let sp: Vector3 = Vector3(0.0,0.2,-0.8)
+let sg: Matrix3 = sp ⊗ sp
+let mm = Atom.Moments(spin: sp, sigma: sg)
 let initials = InitialParam(name:"Co", type: 1, moments: mm, g: 2.02, ℇ: D_0)
-let inisimulation = SimulationProgram.Inputs(T_initial: 0, T_step: 100, T_final: 100, time_step: 1e-3, stop: 10, α: 0.015, thermostat: "quantum")
+let inisimulation = SimulationProgram.Inputs(T_initial: 0, T_step: 100, T_final: 100, time_step: 1e-3, stop: 30, α: 0.01, thermostat: "classical")
 var Co: [Atom] = [Atom(),Atom(),Atom(),Atom()]
 Co[0].position = Vector3(0.0, 0.0, 0.0)
 Co[1].position = Vector3(0.0, 0.5, 0.5)
@@ -206,17 +213,16 @@ Co[3].position = Vector3(0.5, 0.5, 0.0)
 //Define the unit cell atoms (positions in the unit cell). 
 let unitCellAtoms: [Atom] = Co 
 // Define the supercell dimensions. 
-let supercellDimensions = (x: 3, y: 3, z: 3) 
+let supercellDimensions = (x: 1, y: 1, z: 1) 
 // Generate the crystal structure. 
 let crystalStructure = GenerateCrystalStructure(UCAtoms: unitCellAtoms, supercell: supercellDimensions, LatticeConstant: 0.352, InitParam: initials) 
 //Define boundary conditions 
-let Boundaries = BoundaryConditions(BoxSize: 0.352*Vector3(3,3,3) ,PBC: "on")
+let Boundaries = BoundaryConditions(BoxSize: 0.352*Vector3(1,1,1) ,PBC: "off")
 
 var h: Interaction = Interaction(crystalStructure)
-.ExchangeField(typeI:1,typeJ:1,value:J_ij/ℏ.value,Rcut:0.25,BCs:Boundaries)
-
-
-//.ZeemanField(Vector3(direction:"+z"), value: 0.01)
+//.ExchangeField(typeI:1,typeJ:1,value:J_ij,Rcut:0.25,BCs:Boundaries)
+//.UniaxialField(Vector3(direction:"+z"), value: 100.50369)
+//.ZeemanField(Vector3(direction:"+z"), value: 0.001)
 
 //print(try! h.jsonify())
 
@@ -225,9 +231,9 @@ let sol: Integrate = Integrate(h)
 
 //print(try! h.jsonify())
 var p = SimulationProgram(sol)
-p.simulate(Program: "optical_pulse", IP: inisimulation)
+p.simulate(Program: "time_dynamics", IP: inisimulation)
 /*******************************************************************************/
-*/
+
 
 /*
 /****** Simulate Gadolinium bulk FCC 4.24264068712* *******/
@@ -275,7 +281,7 @@ p.simulate(Program: "curie_temperature", IP: inisimulation)
 /*******************************************************************************/
 */
 
-
+/*
 /****** Simulate FeGd bulk alloy *******/
 
 //Gadolinum Paramertes
@@ -372,3 +378,4 @@ let sol: Integrate = Integrate(h)
 var p = SimulationProgram(sol)
 p.simulate(Program: "optical_pulse", IP: inisimulation)
 /*******************************************************************************/
+*/

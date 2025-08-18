@@ -60,11 +60,10 @@ class Integrate: Codable {
             content += String(currentTime)+" "
             let m : Vector3 = Analysis(h.atoms).GetMagnetization()
             let mnorm : Double = Analysis(h.atoms).GetMagnetizationLength()
-            let a1: Atom = h.atoms[23]
-            let a2: Atom = h.atoms[12]
-            //content += " "+String(m.x)+" "+String(m.y)+" "+String(m.z)+" "+String(mnorm)+" "
-            content += " "+String(a1.moments.spin.x)+" "+String(a1.moments.spin.y)+" "+String(a1.moments.spin.z)+" "+String(a1.moments.spin.Norm())+" "
-            content += " "+String(a2.moments.spin.x)+" "+String(a2.moments.spin.y)+" "+String(a2.moments.spin.z)+" "+String(a2.moments.spin.Norm())+"\n"
+            let a1: Atom = h.atoms[1]
+            //content += " "+String(m.x)+" "+String(m.y)+" "+String(m.z)+" "+String(mnorm)+"\n"
+            content += " "+String(a1.moments.spin.x)+" "+String(a1.moments.spin.y)+" "+String(a1.moments.spin.z)+" "+String(a1.moments.spin.Norm())+"\n"
+            //content += " "+String(a2.moments.spin.x)+" "+String(a2.moments.spin.y)+" "+String(a2.moments.spin.z)+" "+String(a2.moments.spin.Norm())+"\n"
             for a in h.atoms {
                 //content += " "+String(a.spin.x)+" "+String(a.spin.y)+" "+String(a.spin.z)+"\n"
                 //content += " "+String(a.Σ.xx)+" "+String(a.Σ.yy)+" "+String(a.Σ.zz)

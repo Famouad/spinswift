@@ -21,7 +21,7 @@ class Interaction : Codable {
         var value: Double = Double()
     }
 
-    private struct STT_Damping : Codable {
+    struct STT_Damping : Codable {
         /// true or false if the damping is computed
         var computed: Bool = false
         var Pol: Vector3 = Vector3()
@@ -50,7 +50,7 @@ class Interaction : Codable {
         var computed: Bool = false
         var α: Double = Double()
     }
-    private struct Uniaxial : Codable {
+    struct Uniaxial : Codable {
         /// true or false if the uniaxial anisotropy field is computed
         var computed: Bool = false
         var axis: Vector3 = Vector3()
@@ -64,11 +64,11 @@ class Interaction : Codable {
     }
 
     private var isZeeman : Zeeman = Zeeman()
-    private var isSTT_Damping : STT_Damping = STT_Damping()
+    var isSTT_Damping : STT_Damping = STT_Damping()
     private var isExchange : Exchange = Exchange()
     private var isDMI : DMI = DMI()
     private var isDamping : Damping = Damping()
-    private var isUniaxial : Uniaxial = Uniaxial()
+    var isUniaxial : Uniaxial = Uniaxial()
     private var isDemagnetizing : Demagnetizing = Demagnetizing()
 
     init(_ atoms: [Atom] = [Atom]()) {
@@ -177,7 +177,7 @@ func ExchangeField(typeI: Int, typeJ: Int, value: Double, Rcut: Double, BCs: Bou
         atoms.forEach {$0.ω = Vector3(0,0,0)}
         //If the fields have been computed, then update them with the proper set of values
         if (isZeeman.computed) {self.ZeemanField(isZeeman.axis,value:isZeeman.value)}
-        if (isSTT_Damping.computed) {self.STT_DampingLike(Pol:isSTT_Damping.Pol,Amplitde:isSTT_Damping.Amplitde)}
+        //if (isSTT_Damping.computed) {self.STT_DampingLike(Pol:isSTT_Damping.Pol,Amplitde:isSTT_Damping.Amplitde)}
         if (isExchange.computed) {self.ExchangeField(typeI: isExchange.typeI, typeJ: isExchange.typeJ, value: isExchange.value, Rcut: isExchange.Rcut, BCs: isExchange.BCs)}
         if (isUniaxial.computed) {self.UniaxialField(isUniaxial.axis,value:isUniaxial.value)}
         if (isDamping.computed) {self.Dampening(isDamping.α)}

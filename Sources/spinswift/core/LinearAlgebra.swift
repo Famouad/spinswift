@@ -351,3 +351,9 @@ public class Matrix3 : Codable {
         return jsonString!
     } 
 }
+
+  /// Compute the quadratic form of a vector with respect to a matrix
+  func quad(_ a:Vector3, _ b: Matrix3, _ c: Vector3) -> Double {
+    let e: Vector3 = b*c
+    return a.x*e.x + a.y*e.y + a.z*e.z
+  }

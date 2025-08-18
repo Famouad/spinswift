@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N SpinSwift_Batch_Tc_QFDR_1      
+#PBS -q mono 
+#PBS -l nodes=1:ppn=1          
+#PBS -j oe                  
+#PBS -o output.log          
+#PBS -m ae                 
+#PBS -M mouad.fattouhi2@cea.fr  
+
+export PATH=${PATH}:/opt/softs/swift/usr/bin
+export PATH=${PATH}:/opt/softs/git/bin/git 
+cd $PBS_O_WORKDIR        
+
+# Execute the job
+swift run
+
